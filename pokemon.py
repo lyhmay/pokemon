@@ -1,10 +1,14 @@
 import torch
 import os,glob
 import  random,csv
+import numpy as np
 
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset,DataLoader
 from torchvision import  transforms
 from PIL import Image
+
+from tensorboardX import SummaryWriter
+
 
 class Pokemon(Dataset):
     def __init__(self, root, resize, mode):
@@ -65,25 +69,75 @@ class Pokemon(Dataset):
     def __len__(self):
         return  len(self.images)
 
+    def denormalize(self,x_hat):
+        mean = [0.485, 0.4565, 0.406]
+        std = [0.229, 0.224, 0.225]
+        #x_hat = (x-mean)/std
+        # x _hat* std +mean
+        # mean[3] x_hat[c,h,w] mean [3] ->[3,1,1]
+        mean =torch.tensor(mean).unsqueeze(1).unsqueeze(1)
+        std =torch.tensor(std).unsqueeze(1).unsqueeze(1)
+        return (x_hat * std +mean)
+
+
     def __getitem__(self, idx):
 
         img,label =self.images[idx],self.labels[idx]
+
+        x=Image.open(img).convert('RGB')
+        #img_array=np.asarray(x)
+        #print('img in shape:',img_array.shape)
         tf = transforms.Compose(
             [
                 lambda x:Image.open(x).convert('RGB'),  # string path -> image data
-                transforms.Resize((self.resize,self.resize)),
-                transforms.ToTensor()
+                transforms.Resize([int(self.resize*1.25),int(self.resize*1.25)]),
+                transforms.RandomRotation(15),
+                transforms.CenterCrop(self.resize),
+                transforms.ToTensor(),
+                transforms.Normalize(mean=[0.485,0.4565,0.406],
+                                     std=[0.229,0.224,0.225])
             ]
         )
         img = tf(img)
+        #print('shape:',img.shape)
         label = torch.tensor(label)
         return img,label
 
 def main():
+    import time
+    import torchvision
 
-    db  = Pokemon('./pokemon',224,'train')
-    x,y = next(iter(db))
-    print('sample:',x.shape,y.shape,y)
+    writer= SummaryWriter(comment = 'test1')
+
+    tf= transforms.Compose([
+        transforms.Resize([64,64]),
+        transforms.ToTensor()
+    ])
+    db =torchvision.datasets.ImageFolder(root='pokemon',transform=tf)
+    loader = DataLoader(db, batch_size= 32, shuffle = True)
+    t = 0
+    for x, y in loader:
+        writer.add_images('batch_images/batch' + str(t), x, t)
+        t += 1
+        time.sleep(10)
+
+
+    # db  = Pokemon('./pokemon',224,'train')
+    # x,y = next(iter(db))
+    # print('sample:',x.shape,y.shape,y)
+    # x=db.denormalize(x)
+    # img_array=x
+    # print(type(img_array))
+    # writer.add_image('image_rotate_1', img_array, 1,dataformats='CHW')
+    # writer.close()
+
+    # loader = DataLoader(db,batch_size= 32, shuffle =True)
+    # t=0
+    # for x, y in loader:
+    #     writer.add_images('batch_images/batch'+str(t),db.denormalize(x),t)
+    #     t+=1
+    #     time.sleep(10)
+
 
 if __name__ == '__main__':
     main()
