@@ -104,39 +104,43 @@ class Pokemon(Dataset):
         return img,label
 
 def main():
+
     import time
     import torchvision
 
     writer= SummaryWriter(comment = 'test1')
 
-    tf= transforms.Compose([
-        transforms.Resize([64,64]),
-        transforms.ToTensor()
-    ])
-    db =torchvision.datasets.ImageFolder(root='pokemon',transform=tf)
-    loader = DataLoader(db, batch_size= 32, shuffle = True)
-    t = 0
-    for x, y in loader:
-        writer.add_images('batch_images/batch' + str(t), x, t)
-        t += 1
-        time.sleep(10)
-
-
-    # db  = Pokemon('./pokemon',224,'train')
-    # x,y = next(iter(db))
-    # print('sample:',x.shape,y.shape,y)
-    # x=db.denormalize(x)
-    # img_array=x
-    # print(type(img_array))
-    # writer.add_image('image_rotate_1', img_array, 1,dataformats='CHW')
-    # writer.close()
-
-    # loader = DataLoader(db,batch_size= 32, shuffle =True)
-    # t=0
+    # tf= transforms.Compose([
+    #     transforms.Resize([64,64]),
+    #     transforms.ToTensor()
+    # ])
+    # db =torchvision.datasets.ImageFolder(root='pokemon',transform=tf)
+    # loader = DataLoader(db, batch_size= 32, shuffle = True, num_workers = 8)
+    # t = 0
     # for x, y in loader:
-    #     writer.add_images('batch_images/batch'+str(t),db.denormalize(x),t)
-    #     t+=1
+    #     writer.add_images('batch_images/batch' + str(t), x, t)
+    #     t += 1
     #     time.sleep(10)
+
+
+
+
+    db  = Pokemon('./pokemon',224,'train')
+    x,y = next(iter(db))
+    print('sample:',x.shape,y.shape,y)
+    x=db.denormalize(x)
+    img_array=x
+    print(type(img_array))
+    writer.add_image('image_rotate_1', img_array, 1,dataformats='CHW')
+    writer.close()
+
+    loader = DataLoader(db,batch_size= 32, shuffle =True)
+    t=0
+    for x, y in loader:
+        writer.add_images('batch_images/batch'+str(t),db.denormalize(x),t)
+        writer.add_text('label_images/batch'+str(t),str(y),t)
+        t+=1
+        time.sleep(10)
 
 
 if __name__ == '__main__':
