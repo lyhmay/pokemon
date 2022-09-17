@@ -4,3 +4,6 @@
 /runs
 /logs
 /__pycache__
+/png
+/PNG2RGBA.py
+/ckpt

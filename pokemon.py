@@ -20,7 +20,7 @@ class Pokemon(Dataset):
             if not os.path.isdir(os.path.join(root,name)):
                 continue
             self.name2label[name] =len(self.name2label.keys())
-        print(self.name2label)
+        #print(self.name2label)
         self.images,self.labels=self.load_csv('images.csv')
 
         if mode=='train':
@@ -63,7 +63,7 @@ class Pokemon(Dataset):
                 images.append(img)
                 labels.append(label)
         assert len(images) == len(labels)
-        print('read from csv file:', filename)
+        #print('read from csv file:', filename)
         return images,labels
 
     def __len__(self):
